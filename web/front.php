@@ -4,24 +4,42 @@ require_once '../vendor/autoload.php';
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing;
+//use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\Matcher\CompiledUrlMatcher;
+use Symfony\Component\Routing\Matcher\Dumper\CompiledUrlMatcherDumper;
 
 $request = Request::createFromGlobals();
-$response = new Response();
+$routes = include __DIR__.'/../src/app.php';
 
-$map = [
-    '/hello' => '../src/pages/hello.php',
-    '/bye' => '../src/pages/bye.php'
-];
 
-$path = $request->getPathInfo();
+$context = new Routing\RequestContext();
+$context->fromRequest($request);
 
-if(isset($map[$path])) {
+$compiledRoutes = (new CompiledUrlMatcherDumper($routes))->getCompiledRoutes();
+
+$matcher = new CompiledUrlMatcher($compiledRoutes, $context);
+
+// $generator = new Routing\Generator\UrlGenerator($routes, $context);
+
+// echo $generator->generate('hello', ['name' => 'Fabien']);
+
+// echo $generator->generate(
+//     'hello',
+//     ['name' => 'Fabien'],
+//     UrlGeneratorInterface::ABSOLUTE_URL
+// );
+
+try {
+    extract($matcher->match($request->getPathInfo()), EXTR_SKIP);
     ob_start();
-    require $map[$path];
-    $response->setContent(ob_get_clean());
-} else {
-    $response->setStatusCode(404);
-    $response->setContent('Not Found');
+    include sprintf(__DIR__ . '/../src/pages/%s.php', $_route);
+
+    $response = new Response(ob_get_clean());
+} catch (Routing\Exception\ResourceNotFoundException $e) {
+    $response = new Response('Not Found', 404);
+} catch (Exception $e) {
+    $response = new Response('An error occurred', 500);
 }
 
 $response->send();
