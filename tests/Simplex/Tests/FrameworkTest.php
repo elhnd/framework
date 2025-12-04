@@ -3,6 +3,8 @@
 use Calendar\Controller\LeapYearController;
 use PHPUnit\Framework\TestCase;
 use Simplex\Framework;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
@@ -38,8 +40,9 @@ class FrameworkTest extends TestCase
 
         $controllerResolver = $this->createMock(ControllerResolverInterface::class);
         $argumentResolver = $this->createMock(ArgumentResolverInterface::class);
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
 
-        return new Framework($matcher, $controllerResolver, $argumentResolver);
+        return new Framework($dispatcher, $matcher, $controllerResolver, $argumentResolver);
     }
 
     public function testErrorHandling(): void
@@ -71,8 +74,9 @@ class FrameworkTest extends TestCase
 
         $controllerResolver = new ControllerResolver();
         $argumentResolver = new ArgumentResolver();
-
-        $framework = new Framework($matcher, $controllerResolver, $argumentResolver);
+        $dispatcher = new EventDispatcher();
+        
+        $framework = new Framework($dispatcher, $matcher, $controllerResolver, $argumentResolver);
 
         $response = $framework->handle(new Request());
 
