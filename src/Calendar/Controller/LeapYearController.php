@@ -12,9 +12,21 @@ class LeapYearController
     {
         $leapYear = new LeapYear();
         if ($leapYear->isLeapYear($year)) {
-            return new Response('Yep, this is a leap year!');
+            $response = new Response('Yep, this is a leap year! ' . rand());
+        } else {
+            $response = new Response('Nope, this is not a leap year.');
         }
 
-        return new Response('Nope, this is not a leap year.');
+        $response->setTtl(10);
+
+        // $response->setEtag('Say my name is Bond, James Bond. ');
+
+        // if ($response->isNotModified($request)) {
+        //     return $response;
+        // }
+
+        // $response->setContent('Hi James');
+
+        return $response;
     }
 }
